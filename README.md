@@ -44,15 +44,19 @@ share/
 - 字体走 Google Fonts（Noto Sans SC 900 / Noto Serif SC / Inter Tight）；没网会回退系统字体，导出本身不受影响。
 - 展示版不是安全系统：静态页面的源码仍可看。真要防住，用登录/密码或只发截图。
 
-## 传 GitHub Pages（联网版）
+## GitHub Pages（已上线）
 
-1. 新建 **public** 仓库，把 `share/` 里的全部文件传到根目录（不要传整个 `LOGO`，PSD/原图会超限）。
-2. `.github/workflows/pages.yml` 用教程里的 30 行静态站工作流，`path: .`。
-3. Settings → Pages → Source = **GitHub Actions**。
-4. 线上：
-   - `/` → 展示版
-   - `/tool.html` → 使用版
-5. 联网打开 `tool.html` 时，导出的 `.md` 会自动写公开资产 URL；远程 AI 能取图。
+- 展示版：https://yoyaaaaaa.github.io/yoya-brief/
+- 使用版：https://yoyaaaaaa.github.io/yoya-brief/tool.html
+- 仓库：https://github.com/YOYAAAAAA/yoya-brief
+
+复刻方法（**不需要 workflow**）：
+
+1. 新建 public 仓库，把 `share/` 里的全部文件传到根目录（不要传整个 `LOGO`，PSD/原图会超限）。
+2. Settings → Pages → **Deploy from a branch** → `main` / `(root)` → Save。
+3. 线上 `/` 是展示版，`/tool.html` 是使用版。
+4. 联网打开 `tool.html` 时，导出的 `.md` 会自动写公开资产 URL；远程 AI 能取图。
+5. 本仓库为了避开 `workflow` 授权，使用 branch 部署；以后要换 Actions，再把 Source 改成 GitHub Actions 并加 `pages.yml`。
 
 GitHub Pages 是公开的；`tool.html` 只是没在展示版里链接，不是权限控制。真要限制，用 Cloudflare Access / Netlify 密码。
 
