@@ -471,6 +471,20 @@
       grid-auto-flow:row;gap:0 10px;max-height:none;overflow:visible}
     .nav-list a{font-size:11.5px;padding:6px 0 6px 8px}
   }
+  /* IP / CONTENT scope */
+  section h2{grid-template-columns:72px minmax(0,1fr)!important}
+  .group-member h2{grid-template-columns:46px minmax(0,1fr)!important}
+  .h-title{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
+  .scope{display:inline-flex;align-items:center;align-self:center;height:20px;padding:0 7px;
+    border:1px solid currentColor;border-radius:1px;font-family:"Inter Tight","Noto Sans SC",sans-serif;
+    font-size:9.5px;font-weight:600;letter-spacing:.12em;line-height:1;opacity:.62;white-space:nowrap}
+  .scope.ip{opacity:.75}
+  @media(max-width:760px){
+    section h2{grid-template-columns:48px minmax(0,1fr)!important}
+    .h-title{gap:7px}
+    .scope{font-size:8px;height:17px;padding:0 5px;letter-spacing:.1em;opacity:.65}
+  }
+  @media(max-width:360px){.scope{display:none}}
 </style>
 <script>document.documentElement.classList.add('js');</script>
 </head>
@@ -479,7 +493,7 @@
 <header class="topbar" id="top">
   <div class="top-inner">
     <a class="brand" href="#top" aria-label="YOYA 项目简报"><img class="logo" src="assets/img/yoya-logo-primary-light.webp" alt="YOYA"></a>
-    <div class="tag">BRAND SYSTEM · PROJECT BRIEF / 2026</div>
+    <div class="tag">BRAND SYSTEM · IP v1.0.0 / 2026</div>
     <div class="top-actions">
       <span class="demo-pill">DEMO</span>
     </div>
@@ -800,7 +814,7 @@ chrome --headless=new --hide-scrollbars --force-device-scale-factor=3.125 --wind
 <section class="disclaimer" id="disclaimer" aria-label="免责申明">
   <div class="disc-inner">
     <img class="disc-mark" src="assets/img/yoya-logo-primary-light.webp" alt="YOYA">
-    <p class="disc-eyebrow">Disclaimer / 使用说明</p>
+    <p class="disc-eyebrow">Disclaimer / 使用说明 · IP 锁定</p>
     <h2>这是一份工作文档，<br>不是法律文件。</h2>
     <div class="disc-cols">
       <p><b>01 / 素材授权</b>模板中的品牌、字体、图片与文案仅用于 YOYA 项目提案与内部协作；对外发布前，请确认素材授权、肖像权与商标使用范围。</p>
@@ -816,6 +830,10 @@ chrome --headless=new --hide-scrollbars --force-device-scale-factor=3.125 --wind
 
 <script type="text/plain" id="yo-contract">
 ## CONTRACT — YOYA 视觉与动效（锁定；只按 STYLE 放行）
+IP_VERSION: 1.0.0
+CHANGE SCOPE: CONTENT ONLY
+- STYLE 是预设变体，不是自由改 IP；未选中不改。
+- IP 变更：只有用户明确说“改 IP”并指定新版本号时才允许；改动必须升版本，Agent 不得自行改。
 > CONTENT 的文本可改；STYLE 中已选择的项可按选值调整；其余资产/色板/字体/纹理/版式/导航/动效/红色语义/字段全部锁定。
 
 ### 0. 可变与不可变
@@ -904,6 +922,8 @@ function gen(){
   var texRef = online ? new URL('motion/lib/yoya-texture-contour-tile.png', pageHref).href : 'motion/lib/yoya-texture-contour-tile.png';
   L.push('# YOYA · 项目简报 / 可移植构建契约 v1.0');
   L.push('');
+  L.push('> **IP LOCK: v1.0.0 · CHANGE SCOPE: CONTENT ONLY**');
+  L.push('> 只允许改 CONTENT（文案/标题/字段值）。改 IP 必须由用户明确说“改 IP”，并升版本；Agent 不得自行改 logo、色板、字体、纹理、版式、导航、动效、免责。');
   L.push('> 交付：把本 .md 拖给本地 Agent。只改 CONTENT；STYLE 为已选风格；CONTRACT 锁定。');
   L.push('> 模板：`'+(online?pageHref:'index.html')+'`');
   L.push('> 资产：`'+assetRef+'`；纹理：`'+texRef+'`');
@@ -1214,6 +1234,23 @@ function download(name,text){
     });
   })();
 
+})();
+</script>
+<script>
+(function(){
+  var map={s04:'IP 预设',s05:'IP 预设',s07:'IP 预设',s11:'IP 参考'};
+  var ss=document.querySelectorAll('main section[id]');
+  for(var i=0;i<ss.length;i++){
+    var s=ss[i], h=s.querySelector('h2'); if(!h) continue;
+    var num=h.querySelector('.num');
+    var t=document.createElement('span'); t.className='h-title';
+    while(h.lastChild && h.lastChild!==num){ t.insertBefore(h.lastChild,t.firstChild); }
+    h.appendChild(t);
+    var b=document.createElement('span');
+    b.className='scope'+(map[s.id]?' ip':'');
+    b.textContent=map[s.id]||'CONTENT';
+    t.appendChild(b);
+  }
 })();
 </script>
 </body>
