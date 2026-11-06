@@ -478,9 +478,9 @@
     <a class="brand" href="#top" aria-label="YOYA 项目简报"><img class="logo" src="assets/img/yoya-logo-primary-light.webp" alt="YOYA"></a>
     <div class="tag">BRAND SYSTEM · PROJECT BRIEF / 2026</div>
     <div class="top-actions">
-      <button class="copy-btn" id="copyBtn" onclick="copyBrief()">复制给 AI</button>
+      <button class="copy-btn" id="copyBtn" onclick="copyBrief()" title="复制内容会先让 AI 读取 logo 文件夹；读不到会提示下载 zip">复制给 AI</button>
       <button class="copy-btn ghost" id="zipBtn" onclick="zipBrief()">存 .zip</button>
-      <span class="ok" id="ok">✓ 已复制，粘贴给 AI</span>
+      <span class="ok" id="ok">✓ 已复制（含读取 logo 文件夹），粘贴给 AI</span>
     </div>
   </div>
   <nav class="nav-panel" id="navPanel" aria-label="章节">
@@ -848,6 +848,11 @@ chrome --headless=new --hide-scrollbars --force-device-scale-factor=3.125 --wind
 - 当前 6 页（01+02 / 03 / 04+05 / 06+07 / 08+09+10 / 11）只是示例，不是固定页数。
 - 每页内容按 CONTENT；模板表单字段本身保留，但不要把表单当成品交付。
 
+### C2. 末页免责（必须，不得省略）
+- 页面最后一节必须是黑底 `#disclaimer`，不能省略、不能改纸白、不能折叠进其他区。
+- eyebrow：`DISCLAIMER / 使用说明`；标题：`这是一份工作文档，` / `不是法律文件。`；四条：01 素材授权 / 02 占位内容 / 03 印刷色差 / 04 专业意见；页脚：`YOYA — PROJECT BRIEF / 2026` + `回到顶部 ↑`。
+- 文案与结构以模板 `index.html` 的 `#disclaimer` 为准；生成新页面时整节复制，不要改写免责内容。
+
 ### D. 导航
 - topbar 56px（≤600 54px），墨黑；展开为满宽 × 20vh（min 170px）薄荷抽屉，默认不铺纹理。
 - 抽屉 grid：1fr 20vw；左进度（大号百分比 + 2px 横线 + 当前/下一节），右目录按实际页数 N（2×ceil(N/2)），不是固定 11。
@@ -911,6 +916,19 @@ function buildBrief(){
   L.push('> 模板：`'+indexRef+'`');
   L.push('> 资产：`'+assetRef+'`；纹理：`'+texRef+'`');
   if(online) L.push('> 联网版：以上为公开 URL；本地版用 `assets/img` / `motion/lib`。');
+  L.push('');
+  L.push('## READ FIRST — 先读取 logo / 素材文件夹（强制）');
+  L.push('');
+  L.push('- 本地优先：`F:\\Practice_New\\LOGO`（logo/素材：`v1.0/assets/img/`；纹理：`motion/lib/yoya-texture-contour-tile.png`；母版：`项目简报模板.html`）。');
+  if(online){
+    L.push('- 线上备选：'+assetRef+'；纹理：'+texRef+'。');
+  }else{
+    L.push('- 本页相对：`assets/img/`、`motion/lib/`（从 tool.html 所在文件夹解析）。');
+  }
+  L.push('- 如果拿到的是 zip：解压后从同一层读 `assets/img/` 与 `motion/lib/`。');
+  L.push('- 开始前必须确认这些资产能读到；不要凭记忆重画 logo，不要改配色、字体、纹理来源。');
+  L.push('- 如果读不到（远程 Agent / 没权限 / 文件夹不存在）：**先不要生成**，回复用户：「我读不到 YOYA 的 logo/素材文件夹。请下载 `yoya-brief-share.zip`（或整个 `share` 文件夹）解压后把路径给我；线上版请用页面里的公开资产 URL。」');
+  L.push('- 用户提供 zip 后：读 `assets/img/` 与 `motion/lib/`，再继续。');
   L.push('');
   L.push('## CONTENT / 只改这里');
   L.push('');
@@ -1007,14 +1025,14 @@ async function copyBrief(){
   showOut(out);
   try{
     await navigator.clipboard.writeText(out);
-    toast('✓ 已复制，粘贴给 AI');
+    toast('✓ 已复制（含 logo 读取说明），粘贴给 AI');
   }catch(e){
     var ta=document.createElement('textarea');
     ta.value=out;
     ta.style.position='fixed'; ta.style.left='-9999px'; ta.style.top='0';
     document.body.appendChild(ta);
     ta.focus(); ta.select();
-    try{ document.execCommand('copy'); toast('✓ 已复制，粘贴给 AI'); }
+    try{ document.execCommand('copy'); toast('✓ 已复制（含 logo 读取说明），粘贴给 AI'); }
     catch(err){ toast('复制失败，请打开下方构建指令手动全选'); }
     ta.remove();
   }
@@ -1306,6 +1324,17 @@ function download(name,text){
         var m=document.getElementById(id); if(m) m.classList.add('group-member');
       });
     });
+  })();
+
+  // 素材缺失：页面自身先提示，避免只拿到一个 HTML 就开工
+  (function(){
+    var probe=new Image();
+    probe.onerror=function(){
+      window.setTimeout(function(){
+        toast('素材缺失：请下载 yoya-brief-share.zip 并解压整包使用');
+      }, 600);
+    };
+    probe.src='assets/img/yoya-logo-primary-light.webp';
   })();
 
 })();

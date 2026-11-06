@@ -39,7 +39,8 @@ share/
 ## 规则
 
 - **页数不是固定的**：`tool.html` 里是示例；导出时选「按内容自动」，AI 按 CONTENT 的信息量决定页数，5 种版面循环，导航/进度按实际页数生成。
-- `.md` 分 `CONTENT`（只改文本/标题/素材/需求/文案）、`STYLE`（已选风格）、`CONTRACT`（锁定 logo/色板/字体/纹理/版式/导航/动效）、`BUILD STEPS`、`ACCEPTANCE`、English digest。
+- `.md` 分 `READ FIRST`（先读 logo/素材文件夹，读不到就提示下载 zip）、`CONTENT`（只改文本/标题/素材/需求/文案）、`STYLE`（已选风格）、`CONTRACT`（锁定 logo/色板/字体/纹理/版式/导航/动效）、`BUILD STEPS`、`ACCEPTANCE`、English digest。
+- 复制/打包出的构建指令顶部会要求 AI 先读 `F:\Practice_New\LOGO`；读不到时**不要生成**，直接提示下载 `yoya-brief-share.zip` 或整个 `share` 文件夹。页面自身也会在素材缺失时弹提示。
 - 导出是**本地**的：复制走剪贴板，zip 走浏览器本地打包；没有服务器，不上传内容。
 - 字体走 Google Fonts（Noto Sans SC 900 / Noto Serif SC / Inter Tight）；没网会回退系统字体，导出本身不受影响。
 - 展示版不是安全系统：静态页面的源码仍可看。真要防住，用登录/密码或只发截图。
