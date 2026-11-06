@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YOYA · 项目简报（展示版）</title>
+<link rel="icon" type="image/png" href="assets/img/yoya-favicon-128.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;900&family=Noto+Sans+SC:wght@400;500;900&family=Noto+Serif+SC:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F5F5; --paper-soft:#FBFBFB; --ink:#1B1B18; --muted:#6B6B6B;
+    --line:#DEDEDE; --mint:#8EC3A5; --mint-deep:#4F7C63; --red:#F40101;
+    --tex:url("motion/lib/yoya-texture-contour-tile.png");
+    --tex-size:1100px;
+    --tex-op:.065;          /* 顶栏：原来的 10% × 0.65 */
+    --tex-op-dark:.0585;    /* 第 11 节：原来的 9% × 0.65 */
+    --tex-op-nav:.05;
+    --tex-op-disc:.05;
+    --bar:56px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Serif SC","PingFang SC","Microsoft YaHei",serif;line-height:1.7;
+    -webkit-font-smoothing:antialiased}
+  img{max-width:100%;display:block}
+  a{color:inherit}
+  .disp{font-family:"Noto Sans SC","Inter Tight",system-ui,sans-serif;font-weight:900;letter-spacing:-.03em}
+  .lbl{font-family:"Inter Tight","PingFang SC",system-ui,sans-serif}
+
+  /* ---------- 顶栏 + 章节导航 ---------- */
+  header.topbar{position:sticky;top:0;z-index:110;height:var(--bar);background:var(--ink);color:#fff;
+    padding:10px 28px;border-bottom:1px solid rgba(255,255,255,.08)}
+  header.topbar::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:var(--tex);background-repeat:repeat;background-size:var(--tex-size);
+    mix-blend-mode:screen;opacity:var(--tex-op)}
+  header.topbar.is-stuck{box-shadow:0 12px 34px rgba(0,0,0,.26)}
+  header.topbar .top-inner{transition:transform .3s ease}
+  header.topbar:hover .top-inner,header.topbar.nav-open .top-inner{transform:translateY(-3px)}
+  header.topbar:hover,header.topbar.nav-open{box-shadow:0 24px 54px rgba(0,0,0,.42)}
+  .top-inner{position:relative;z-index:1;max-width:1320px;margin:0 auto;
+    display:flex;align-items:center;gap:18px}
+  .brand{display:inline-flex;flex:none;text-decoration:none}
+  .top-inner .logo{height:22px;width:auto}
+  .top-inner .tag{flex:1;text-align:center;font-family:"Inter Tight",sans-serif;font-size:10px;
+    letter-spacing:.24em;color:#c9c9c2;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+  .top-actions{position:relative;display:flex;align-items:center;gap:9px;flex:none;margin-left:auto}
+
+  .nav-wrap{position:relative}
+  .nav-trigger{position:relative;display:inline-flex;align-items:center;gap:10px;
+    background:transparent;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:2px;
+    padding:8px 11px;font-family:"Inter Tight","PingFang SC",sans-serif;font-size:12px;
+    letter-spacing:.02em;cursor:pointer;overflow:hidden;transition:background .25s,border-color .25s,transform .25s}
+  .nav-trigger:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.42)}
+  .nav-trigger b{font-family:"Inter Tight",sans-serif;font-weight:700;font-size:10px;
+    letter-spacing:.1em;color:var(--mint)}
+  .nav-trigger .chev{font-size:10px;line-height:1;color:var(--mint);transition:transform .3s}
+  .topbar.nav-open .nav-trigger{border-color:var(--mint)}
+  .topbar.nav-open .nav-trigger .chev{transform:rotate(180deg)}
+  .nav-panel{position:absolute;top:100%;left:0;right:0;width:100%;height:20vh;min-height:170px;
+    display:grid;grid-template-columns:1fr 20vw;grid-template-rows:auto auto 1fr;gap:10px 48px;
+    padding:22px 40px 20px;background:var(--mint);border-top:1px solid rgba(27,27,24,.18);
+    box-shadow:0 40px 80px rgba(0,0,0,.35);z-index:60;opacity:0;transform:translateY(-14px);
+    pointer-events:none;overflow:hidden;
+    transition:opacity .22s ease,transform .3s cubic-bezier(.2,.75,.2,1)}
+  .nav-panel>*{position:relative;z-index:1}
+  @media (hover:hover){
+    .topbar:hover .nav-panel{opacity:1;transform:none;pointer-events:auto}
+  }
+  .topbar.nav-open .nav-panel{opacity:1;transform:none;pointer-events:auto}
+  .topbar.force-closed .nav-panel{opacity:0;transform:translateY(-8px) scale(.98);pointer-events:none}
+  .nav-head{grid-column:1;grid-row:1;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    font-family:"Inter Tight",sans-serif;font-size:9px;letter-spacing:.22em;
+    text-transform:uppercase;color:rgba(27,27,24,.55)}
+  .nav-head b{font-weight:700;font-size:clamp(38px,4vw,56px);line-height:.85;
+    letter-spacing:-.04em;color:var(--ink)}
+  .nav-bar{grid-column:1;grid-row:2;height:2px;background:rgba(27,27,24,.18);align-self:start}
+  .nav-bar i{display:block;height:100%;width:0;background:var(--ink);transition:none}
+  .nav-current{grid-column:1;grid-row:3;display:flex;justify-content:space-between;gap:16px;
+    font-family:"Inter Tight","PingFang SC",sans-serif;font-size:11px;color:rgba(27,27,24,.62)}
+  .nav-current b{font-weight:600;color:var(--ink)}
+  .nav-current em{font-style:normal;color:rgba(27,27,24,.42)}
+  .nav-list{grid-column:2;grid-row:1 / 4;display:grid;grid-template-columns:1fr 1fr;
+    grid-template-rows:repeat(6,1fr);grid-auto-flow:column;gap:0 14px;max-height:none;overflow:visible}
+  .nav-list a{position:relative;display:grid;grid-template-columns:22px 1fr;align-items:baseline;
+    gap:6px;padding:4px 0 4px 8px;border-top:1px solid rgba(27,27,24,.14);
+    text-decoration:none;color:rgba(27,27,24,.62);font-family:"Inter Tight","PingFang SC",sans-serif;
+    font-size:11px;line-height:1.3;transition:color .25s,background .25s}
+  .nav-list a b{font-family:"Inter Tight",sans-serif;font-size:8.5px;font-weight:700;
+    letter-spacing:.08em;color:rgba(27,27,24,.38);transition:color .25s}
+  .nav-list a::after{content:"";position:absolute;left:8px;right:0;bottom:2px;height:1px;
+    background:var(--ink);transform:scaleX(0);transform-origin:right;transition:transform .35s ease}
+  .nav-list a:hover{color:var(--ink);background:rgba(27,27,24,.06)}
+  .nav-list a:hover::after{transform:scaleX(1);transform-origin:left}
+  .nav-list a.on{color:var(--ink);background:linear-gradient(90deg,rgba(27,27,24,.12),transparent)}
+  .nav-list a.on b{color:var(--ink)}
+  .nav-list a.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--ink)}
+
+  .copy-btn{position:relative;background:var(--mint);color:var(--ink);border:0;border-radius:2px;
+    padding:9px 14px;font-family:"Inter Tight","PingFang SC",sans-serif;font-weight:700;
+    font-size:12px;letter-spacing:.01em;cursor:pointer;overflow:hidden;
+    transition:background .25s,transform .25s,box-shadow .25s}
+  .copy-btn:hover{background:#A9D8C0;transform:translateY(-2px);box-shadow:0 9px 20px rgba(0,0,0,.24)}
+  .ok{position:absolute;top:calc(100% + 9px);right:0;z-index:80;display:none;
+    background:var(--mint);color:var(--ink);font-family:"Inter Tight","PingFang SC",sans-serif;
+    font-size:11.5px;font-weight:600;padding:6px 10px;border-radius:2px;white-space:nowrap}
+  .demo-pill{display:inline-flex;align-items:center;height:26px;padding:0 10px;border:1px solid rgba(142,195,165,.5);
+    color:var(--mint);font-family:"Inter Tight","PingFang SC",sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.16em}
+  .demo-bar{position:sticky;top:var(--bar);z-index:25;display:flex;align-items:center;justify-content:center;
+    min-height:34px;padding:8px 18px;background:var(--mint);color:var(--ink);
+    font-family:"Inter Tight","PingFang SC",sans-serif;font-size:10.5px;font-weight:700;
+    letter-spacing:.14em;text-align:center;border-bottom:1px solid rgba(27,27,24,.16)}
+
+  /* ---------- Hero：56/44 ---------- */
+  .hero{display:grid;grid-template-columns:56% 44%;min-height:min(620px,74vh);background:var(--ink);overflow:hidden}
+  .hero-media{position:relative;min-height:520px;overflow:hidden;
+    background:url("assets/img/yoya-wall-mint-2400.webp") center/cover no-repeat}
+  .hero-media::after{content:"";position:absolute;inset:0;z-index:1;
+    background:linear-gradient(180deg,rgba(27,27,24,0) 52%,rgba(27,27,24,.38))}
+  .hero-media::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background-image:var(--tex);background-repeat:repeat;background-size:var(--tex-size);
+    opacity:.08;mix-blend-mode:screen;
+    -webkit-mask-image:linear-gradient(180deg,transparent 52%,#000 100%);
+    mask-image:linear-gradient(180deg,transparent 52%,#000 100%)}
+  .hero-media .mark{position:absolute;left:clamp(20px,3.4vw,48px);bottom:clamp(18px,3vw,34px);
+    width:min(38%,260px);opacity:.94;z-index:3}
+  .hero-media .hm{position:absolute;left:clamp(20px,3.4vw,48px);top:clamp(18px,3vw,30px);z-index:3;
+    font-family:"Inter Tight",sans-serif;font-size:10px;font-weight:500;letter-spacing:.22em;
+    text-transform:uppercase;color:rgba(255,255,255,.74)}
+  .hero-panel{position:relative;display:flex;flex-direction:column;color:#fff;
+    padding:clamp(26px,3.2vw,46px) clamp(22px,3.4vw,52px) 22px}
+  .hero-panel::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:var(--tex);background-repeat:repeat;background-size:var(--tex-size);
+    mix-blend-mode:screen;opacity:.05}
+  .hero-panel>*{position:relative;z-index:1}
+  .hero-panel .eyebrow{font-family:"Inter Tight",sans-serif;font-weight:600;font-size:10px;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--mint)}
+  .hero-panel h1{font-family:"Noto Sans SC","Inter Tight",sans-serif;font-weight:900;
+    font-size:clamp(42px,4.9vw,76px);line-height:1.02;letter-spacing:-.045em;
+    margin:auto 0 16px}
+  .hero-lede{font-family:"Noto Serif SC",serif;font-size:15.5px;line-height:1.85;
+    color:rgba(255,255,255,.64);max-width:440px;margin:0 0 22px}
+  .hero-cta{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
+    background:var(--red);color:#fff;text-decoration:none;
+    font-family:"Inter Tight",sans-serif;font-weight:600;font-size:13px;letter-spacing:.02em;
+    padding:13px 22px;border-radius:2px}
+  .hero-cta:hover{background:#d40000}
+  .hero-meta{margin-top:auto;padding-top:28px;display:flex;justify-content:space-between;gap:16px;
+    border-top:1px solid rgba(255,255,255,.14);font-family:"Inter Tight",sans-serif;
+    font-weight:500;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+
+  /* ---------- 正文 ---------- */
+  .shell{max-width:1120px;margin:0 auto;padding:0 40px}
+  .doc{min-width:0;width:100%;max-width:940px;margin:0 auto;padding:34px 0 0}
+
+  /* ---------- 每一节 ---------- */
+  section{position:relative;padding:30px 0 8px;border-top:1px solid var(--line);margin:0 0 34px;
+    scroll-margin-top:72px}
+  section:first-of-type{border-top:0}
+  section h2{display:grid;grid-template-columns:72px 1fr;align-items:baseline;gap:14px;
+    margin:0 0 6px;font-family:"Noto Sans SC","Inter Tight",sans-serif;font-weight:900;
+    font-size:clamp(24px,2.4vw,32px);letter-spacing:-.02em}
+  section h2 .num{font-family:"Inter Tight",sans-serif;font-weight:900;
+    font-size:clamp(30px,3.2vw,44px);line-height:1;color:var(--ink);letter-spacing:-.02em}
+  section .desc{color:var(--muted);font-size:13.5px;line-height:1.75;max-width:640px;margin:0 0 22px}
+
+  /* ---------- 输入 ---------- */
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 28px;margin:0}
+  .field{display:block;margin:0 0 18px;min-width:0}
+  .field label{display:block;font-family:"Inter Tight",sans-serif;font-weight:600;font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+  .field input,.field textarea{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;
+    background:transparent;padding:7px 0;font-family:"Noto Serif SC",serif;font-size:15.5px;
+    line-height:1.6;color:var(--ink)}
+  .field textarea{min-height:54px;resize:vertical}
+  .field input::placeholder,.field textarea::placeholder{color:#ADADAD}
+  .field input:focus,.field textarea:focus{outline:0;border-bottom-color:var(--ink)}
+
+  /* ---------- 勾选 ---------- */
+  .opts{display:flex;flex-wrap:wrap;gap:8px 26px;margin:0 0 16px}
+  .opt{display:inline-flex;align-items:center;gap:9px;font-family:"Inter Tight","PingFang SC",sans-serif;
+    font-weight:500;font-size:13.5px;line-height:1.4;cursor:pointer;user-select:none}
+  .opt input[type=checkbox]{appearance:none;-webkit-appearance:none;width:15px;height:15px;
+    border:1px solid #A8A8A8;border-radius:1px;background:transparent;cursor:pointer;flex:none;
+    position:relative;margin:0}
+  .opt input[type=checkbox]:checked{background:var(--ink);border-color:var(--ink)}
+  .opt input[type=checkbox]:checked::after{content:"";position:absolute;left:4px;top:1px;
+    width:5px;height:9px;border:solid var(--paper);border-width:0 2px 2px 0;transform:rotate(42deg)}
+  .opt input[type=radio]{appearance:none;-webkit-appearance:none;width:15px;height:15px;
+    border:1px solid #A8A8A8;border-radius:1px;background:transparent;cursor:pointer;flex:none;
+    position:relative;margin:0}
+  .opt input[type=radio]:checked{background:var(--ink);border-color:var(--ink)}
+  .opt input[type=radio]:checked::after{content:"";position:absolute;left:4.5px;top:4.5px;
+    width:6px;height:6px;background:var(--paper)}
+  .opt .other{width:150px;padding:5px 8px;font-family:"Noto Serif SC",serif;font-size:13px;
+    border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink)}
+  .opt .other:focus{outline:0;border-bottom-color:var(--ink)}
+
+  .group-title{font-family:"Inter Tight",sans-serif;font-weight:700;font-size:10.5px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--mint-deep);
+    margin:22px 0 8px;padding-top:8px;border-top:1px solid var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:4px 18px;margin:0 0 8px}
+
+  /* ---------- 素材表 ---------- */
+  table.mat{width:100%;border-collapse:collapse;font-size:14px;margin:0 0 8px}
+  table.mat th{font-family:"Inter Tight",sans-serif;font-weight:700;font-size:10px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);text-align:left;
+    padding:9px 10px 9px 0;border-bottom:1px solid var(--ink)}
+  table.mat td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+  table.mat td:first-child{font-family:"Inter Tight","PingFang SC",sans-serif;font-weight:500;
+    font-size:13.5px;color:var(--ink)}
+  table.mat input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;
+    padding:6px 0;font-family:"Noto Serif SC",serif;font-size:14px;color:var(--ink)}
+  table.mat input:focus{outline:0;border-bottom-color:var(--ink)}
+
+  /* ---------- 说明 / 代码 ---------- */
+  .note{font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 10px}
+  .note b{color:var(--ink);font-weight:500}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;color:var(--mint-deep)}
+  pre.code{margin:0 0 18px;padding:14px 16px;background:var(--ink);color:#D8DED9;border-radius:2px;
+    font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.85;overflow:auto;white-space:pre}
+
+  details.out{margin:8px 0 0;border-top:1px solid var(--line);padding:0}
+  details.out summary{cursor:pointer;font-family:"Inter Tight",sans-serif;font-weight:700;
+    font-size:12px;letter-spacing:.06em;padding:13px 0;color:var(--ink)}
+  details.out textarea{width:100%;min-height:230px;border:1px solid var(--line);border-radius:2px;
+    background:var(--paper-soft);font-family:ui-monospace,Consolas,monospace;font-size:12px;
+    line-height:1.7;padding:12px;color:var(--ink)}
+  details.out textarea.cmd{min-height:150px}
+
+  /* ---------- 深色段 11 ---------- */
+  section.dark{background:var(--ink);color:#fff;border-top:0;margin:54px 0 0;
+    padding:38px 34px 20px;position:relative;overflow:hidden}
+  section.dark::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:var(--tex);background-repeat:repeat;background-size:var(--tex-size);
+    mix-blend-mode:screen;opacity:var(--tex-op-dark);
+    -webkit-mask-image:radial-gradient(120% 100% at 50% 45%,#000 55%,transparent 100%);
+    mask-image:radial-gradient(120% 100% at 50% 45%,#000 55%,transparent 100%)}
+  section.dark>*{position:relative;z-index:1}
+  section.dark h2{color:#fff}
+  section.dark h2 .num{color:var(--mint)}
+  section.dark .desc,section.dark .note{color:rgba(255,255,255,.62)}
+  section.dark .note b{color:#fff}
+  section.dark code{color:var(--mint)}
+  section.dark .group-title{color:var(--mint);border-top-color:rgba(255,255,255,.18)}
+  section.dark table.mat th{color:rgba(255,255,255,.5);border-bottom-color:rgba(255,255,255,.35)}
+  section.dark table.mat td{border-bottom-color:rgba(255,255,255,.14)}
+  section.dark table.mat td:first-child{color:#fff}
+  section.dark details.out{border-top-color:rgba(255,255,255,.18)}
+  section.dark details.out summary{color:#fff}
+  section.dark details.out textarea{background:#111;border-color:rgba(255,255,255,.2);color:#D8DED9}
+  section.dark pre.code{background:#111;border:1px solid rgba(255,255,255,.14)}
+
+  /* ---------- 末页：黑底免责 ---------- */
+  .disclaimer{position:relative;background:#0B0B0A;color:#fff;margin:0;
+    padding:110px 40px 54px;overflow:hidden;scroll-margin-top:52px}
+  .disclaimer::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:var(--tex);background-repeat:repeat;background-size:var(--tex-size);
+    mix-blend-mode:screen;opacity:var(--tex-op-disc)}
+  .disc-inner{position:relative;z-index:1;max-width:1120px;margin:0 auto}
+  .disc-mark{height:22px;width:auto;margin:0 0 36px;opacity:.95!important}
+  .disc-eyebrow{font-family:"Inter Tight",sans-serif;font-weight:600;font-size:10px;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--mint);margin:0 0 18px}
+  .disclaimer h2{font-family:"Noto Sans SC","Inter Tight",sans-serif;font-weight:900;
+    font-size:clamp(38px,5.2vw,72px);line-height:1.06;letter-spacing:-.04em;
+    margin:0 0 46px;max-width:820px;display:block;grid-template-columns:none}
+  .disc-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px 48px;max-width:980px;
+    padding:32px 0 58px;border-top:1px solid rgba(255,255,255,.14)}
+  .disc-cols p{font-family:"Noto Serif SC",serif;font-size:14.5px;line-height:1.95;
+    color:rgba(255,255,255,.64);margin:0}
+  .disc-cols b{display:block;font-family:"Inter Tight",sans-serif;font-weight:600;
+    font-size:9.5px;letter-spacing:.2em;color:var(--mint);margin-bottom:7px}
+  .disc-foot{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    padding-top:18px;border-top:1px solid rgba(255,255,255,.14);
+    font-family:"Inter Tight",sans-serif;font-size:10px;letter-spacing:.16em;
+    color:rgba(255,255,255,.42);text-transform:uppercase}
+  .disc-foot a{position:relative;color:#fff;text-decoration:none}
+  .disc-foot a::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:1px;
+    background:var(--mint);transform:scaleX(0);transform-origin:right;transition:transform .35s}
+  .disc-foot a:hover::after{transform:scaleX(1);transform-origin:left}
+
+  /* ---------- 模板动效 ---------- */
+  html.js .reveal{opacity:0;transform:translateY(14px);
+    transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1);
+    transition-delay:calc(var(--i,0) * 55ms)}
+  html.js .reveal.in{opacity:1;transform:none}
+  .hero-cta,.nav-trigger,.copy-btn{position:relative;overflow:hidden}
+  .rip{position:absolute;border-radius:50%;transform:scale(0);pointer-events:none;
+    animation:rip .55s ease-out forwards;z-index:0}
+  @keyframes rip{to{transform:scale(2.8);opacity:0}}
+  .wipe{position:fixed;left:0;right:0;top:var(--bar);height:0;z-index:100;background:var(--mint);
+    overflow:hidden;pointer-events:none;visibility:hidden;opacity:0;
+    transition:height .5s cubic-bezier(.7,0,.2,1),opacity .24s ease .18s}
+  .wipe.run{visibility:visible;opacity:1;height:calc(100vh - var(--bar));
+    transition:height .52s cubic-bezier(.7,0,.2,1),opacity .1s ease}
+  .wipe.out{visibility:visible;opacity:0;height:20vh;
+    transition:height .45s cubic-bezier(.7,0,.2,1),opacity .22s ease .34s}
+  .wipe-logo{position:absolute;top:50%;left:50%;width:min(220px,42vw);height:auto;
+    transform:translate(-50%,-50%);filter:drop-shadow(0 3px 14px rgba(27,27,24,.22))}
+  @media (min-width:901px){
+    html{scroll-snap-type:y proximity;scroll-padding-top:52px}
+    section,.disclaimer{scroll-snap-align:start}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;scroll-snap-type:none}
+    html.js .reveal{opacity:1;transform:none;transition:none}
+  }
+
+  /* 正文节 · 五种版面循环 */
+  section.has-band{padding-top:0}
+  .sec-band{position:relative;overflow:hidden;display:flex;align-items:flex-end;
+    min-height:300px;margin:0 0 34px;padding:40px;background:var(--paper-soft);
+    border-bottom:1px solid var(--line)}
+  .sec-copy{position:relative;z-index:3;max-width:56%}
+  .sec-copy h2{margin:0 0 14px;font-size:clamp(34px,3.8vw,56px);line-height:1.02;
+    letter-spacing:-.05em;font-weight:900;text-wrap:balance}
+  .sec-copy .desc{margin:0;max-width:42ch;font-size:15px;line-height:1.8;color:var(--ink-soft)}
+  .sec-art{position:absolute;inset:0 0 0 auto;width:42%;overflow:hidden}
+  .art-tag{position:absolute;top:18px;right:20px;z-index:4;font:700 9px/1.4 "Inter Tight",sans-serif;
+    letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+  .art-photo{position:absolute;inset:0;background:url("assets/img/yoya-wall-mint-2400.webp") center/cover}
+  .art-photo.detail{background-image:url("assets/img/yoya-wall-mint-detail-960.webp")}
+  .art-red{position:absolute;left:0;bottom:0;z-index:3;display:flex;flex-direction:column;gap:9px;
+    width:78%;padding:20px 22px;background:var(--red);color:#fff}
+  .art-red .k{font:700 8.5px/1.3 "Inter Tight",sans-serif;letter-spacing:.16em;text-transform:uppercase;opacity:.8}
+  .art-red b{font:900 54px/.9 "Inter Tight",sans-serif;letter-spacing:-.05em}
+  .art-red .t{font:900 18px/1.15 "Noto Sans SC",sans-serif;letter-spacing:-.03em}
+  .art-red em{font:600 9px/1.4 "Inter Tight",sans-serif;font-style:normal;letter-spacing:.08em;
+    border-bottom:1px solid rgba(255,255,255,.6);align-self:flex-start;padding-bottom:2px}
+  .art-bar{position:absolute;left:0;right:0;bottom:0;z-index:5;display:flex;justify-content:space-between;
+    align-items:center;gap:20px;padding:14px 22px;background:var(--mint);color:var(--ink);
+    font:700 12px/1.3 "Inter Tight",sans-serif;letter-spacing:.04em}
+  .art-bar em{font-style:normal;font-weight:600;letter-spacing:.06em}
+  .art-ghost{position:absolute;right:18px;bottom:-20px;z-index:1;font:900 220px/.8 "Inter Tight",sans-serif;
+    letter-spacing:-.09em;color:transparent;-webkit-text-stroke:1px var(--line)}
+  .sec-band[data-lay="poster"]{background:var(--paper)}
+  .sec-band[data-lay="poster"] .sec-art{width:36%;background:var(--mint)}
+  .sec-band[data-lay="statement"]{background:var(--ink);color:#fff;padding-bottom:86px}
+  .sec-band[data-lay="statement"] .sec-copy h2{color:#fff}
+  .sec-band[data-lay="statement"] .sec-copy .desc{color:rgba(245,245,245,.68)}
+  .sec-band[data-lay="statement"] .sec-art{width:46%}
+  .sec-band[data-lay="statement"] .sec-art::after{content:"";position:absolute;inset:0;z-index:1;
+    background:linear-gradient(90deg,var(--ink),transparent 36%)}
+  .sec-band[data-lay="material"]{background:var(--ink);color:#fff}
+  .sec-band[data-lay="material"] .sec-copy h2{color:#fff}
+  .sec-band[data-lay="material"] .sec-copy .desc{color:rgba(245,245,245,.68)}
+  .sec-band[data-lay="material"] .sec-art{width:44%}
+  .sec-band[data-lay="contact"]{background:var(--paper);padding-bottom:86px}
+  .sec-band[data-lay="contact"] .sec-art{width:44%}
+  .sec-band[data-lay="form"]{min-height:148px;padding:32px 40px;background:var(--paper-soft)}
+  .sec-band[data-lay="form"] .sec-copy{max-width:100%}
+  .sec-band[data-lay="form"] .sec-copy h2{font-size:clamp(30px,3.2vw,44px)}
+  .sec-band[data-lay="form"] .sec-art{width:34%;background:none}
+  .sec-band[data-lay="form"] .art-tag{color:var(--muted)}
+  /* 合并页：组内小节 */
+  .group-member{border-top:0;padding-top:26px;margin-bottom:24px;scroll-snap-align:none}
+  .group-member h2{grid-template-columns:46px 1fr;font-size:clamp(20px,1.9vw,24px);
+    color:var(--ink-soft);margin-top:0}
+  .group-member h2 .num{font-size:clamp(22px,2.1vw,28px);color:var(--muted)}
+  .group-member .desc{font-size:12.5px;margin-bottom:18px}
+  /* 黑块统一等高线 */
+  .sec-band[data-lay="statement"]::before,.sec-band[data-lay="material"]::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+    background-image:var(--tex);background-repeat:repeat;background-size:var(--tex-size);
+    mix-blend-mode:screen;opacity:.07}
+  .sec-band[data-lay="statement"]::before{
+    z-index:2;opacity:.1;
+    -webkit-mask-image:linear-gradient(90deg,#000 0 54%,rgba(0,0,0,.9) 58%,transparent 70.6%);
+    mask-image:linear-gradient(90deg,#000 0 54%,rgba(0,0,0,.9) 58%,transparent 70.6%)}
+  .sec-band[data-lay="statement"] .sec-copy,.sec-band[data-lay="material"] .sec-copy{z-index:3}
+  .sec-band[data-lay="statement"] .sec-art,.sec-band[data-lay="material"] .sec-art{z-index:1}
+  .sec-band[data-lay="statement"] .sec-copy h2 .num,
+  .sec-band[data-lay="material"] .sec-copy h2 .num{color:var(--mint)}
+  /* 红色收成点睛：声明条=薄荷，联系条=红，材质数据=纸白 */
+  .sec-band[data-lay="statement"] .art-bar{background:var(--mint);color:var(--ink)}
+  .sec-band[data-lay="statement"] .art-bar em{color:var(--ink)}
+  .sec-band[data-lay="contact"] .art-bar{background:var(--red);color:#fff}
+  .sec-band[data-lay="material"] .art-red{background:var(--paper);color:var(--ink)}
+  .sec-band[data-lay="material"] .art-red .k{color:var(--mint-deep);opacity:1}
+  .sec-band[data-lay="material"] .art-red em{border-bottom-color:rgba(27,27,24,.35)}
+  @media (max-width:760px){
+    .sec-band{display:block;min-height:0;padding:26px 18px 0;margin:0 0 26px}
+    .sec-band[data-lay="statement"],.sec-band[data-lay="contact"]{padding-bottom:70px}
+    .sec-band[data-lay="form"]{min-height:0;padding-bottom:16px}
+    .sec-copy{max-width:100%}
+    .sec-copy h2{font-size:clamp(30px,8vw,40px);margin-bottom:10px}
+    .sec-copy .desc{font-size:14.5px;line-height:1.75;max-width:none}
+    .sec-art,.sec-band[data-lay="poster"] .sec-art,.sec-band[data-lay="statement"] .sec-art,
+    .sec-band[data-lay="material"] .sec-art,.sec-band[data-lay="contact"] .sec-art{
+      position:relative;width:auto;height:120px;margin:20px -18px 0}
+    .sec-band[data-lay="form"] .sec-art{display:none}
+    .sec-band[data-lay="statement"]::before{
+      z-index:0;opacity:.07;-webkit-mask-image:none;mask-image:none}
+    .sec-band[data-lay="statement"] .sec-art::before{content:"";position:absolute;inset:0;
+      z-index:2;pointer-events:none;background-image:var(--tex);background-repeat:repeat;
+      background-size:var(--tex-size);opacity:.1;mix-blend-mode:screen;
+      -webkit-mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.85) 8%,transparent 36%);
+      mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.85) 8%,transparent 36%)}
+    .art-tag{top:12px;right:14px;font-size:8px}
+    .art-red{width:64%;padding:12px 14px;gap:5px}
+    .art-red b{font-size:34px}
+    .art-red .t{font-size:13px}
+    .art-red .k{font-size:7px}
+    .art-red em{font-size:8px}
+    .art-bar{padding:10px 14px;font-size:10px}
+    .art-ghost{display:none}
+  }
+
+  @media (max-width:1100px){
+    .shell{padding:0 28px}
+    .doc{max-width:940px;padding-top:28px}
+    .hero{grid-template-columns:52% 48%}
+    .top-inner .tag{display:none}
+  }
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .hero-media{min-height:300px;max-height:380px}
+    .hero-panel{padding:26px 24px 22px}
+    .hero-panel h1{font-size:clamp(38px,9vw,54px);margin:26px 0 14px}
+    .hero-meta{padding-top:20px}
+  }
+  @media (max-width:600px){
+    :root{--bar:54px}
+    .shell{padding:0 18px}
+    section h2{grid-template-columns:48px 1fr;gap:10px}
+    section h2 .num{font-size:30px}
+    section h2{font-size:25px}
+    .row{grid-template-columns:1fr}
+    .grid{grid-template-columns:1fr 1fr}
+    table.mat{display:block;font-size:12.5px}
+    table.mat tbody{display:block}
+    table.mat tr{display:block;padding:11px 0;border-bottom:1px solid var(--line)}
+    table.mat tr:first-child{display:none}
+    table.mat td{display:block;width:auto;border:0;padding:2px 0}
+    table.mat td:first-child{font-weight:600}
+    table.mat td:nth-child(2){padding-top:4px}
+    table.mat td:nth-child(3){display:block;color:var(--muted);font-size:11.5px;padding-top:2px}
+    table.mat input{border-bottom-color:var(--line)}
+    section.dark table.mat tr{border-bottom-color:rgba(255,255,255,.14)}
+    section.dark table.mat td:nth-child(3){color:rgba(255,255,255,.5)}
+    section.dark table.mat td:first-child{color:#fff}
+    section.dark{padding:28px 18px 14px;margin-left:-18px;margin-right:-18px}
+    header.topbar{padding:9px 18px}
+    .top-inner .logo{height:20px}
+    .top-inner .tag{display:none}
+    .nav-trigger{padding:7px 9px;gap:7px}
+    .nav-trigger #navTitle{display:none}
+    .copy-btn{padding:8px 10px;font-size:11px}
+    .nav-panel{position:fixed;top:54px;left:18px;right:18px;width:auto;height:auto;min-height:0;
+      max-height:calc(100vh - 86px);display:block;padding:18px;transform:translateY(-8px);
+      overflow:auto}
+    .nav-head b{font-size:38px}
+    .nav-current{margin-top:8px}
+    .nav-list{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:none;
+      grid-auto-flow:row;gap:0 10px;max-height:none;overflow:visible}
+    .nav-list a{font-size:11px;padding:5px 0 5px 8px}
+    .disclaimer{padding:84px 18px 46px}
+    .disc-cols{grid-template-columns:1fr;gap:18px;padding-bottom:42px}
+    .disclaimer h2{font-size:36px;margin-bottom:34px}
+    .disc-mark{height:20px;margin-bottom:26px}
+  }
+  @media (max-width:900px) and (min-width:601px){
+    .nav-panel{position:fixed;top:54px;left:18px;right:18px;width:auto;height:auto;min-height:0;
+      max-height:calc(100vh - 86px);display:block;padding:18px;transform:translateY(-8px);
+      overflow:auto}
+    .nav-head b{font-size:40px}
+    .nav-current{margin-top:10px}
+    .nav-list{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:none;
+      grid-auto-flow:row;gap:0 10px;max-height:none;overflow:visible}
+    .nav-list a{font-size:11.5px;padding:6px 0 6px 8px}
+  }
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<header class="topbar" id="top">
+  <div class="top-inner">
+    <a class="brand" href="#top" aria-label="YOYA 项目简报"><img class="logo" src="assets/img/yoya-logo-primary-light.webp" alt="YOYA"></a>
+    <div class="tag">BRAND SYSTEM · PROJECT BRIEF / 2026</div>
+    <div class="top-actions">
+      <span class="demo-pill">DEMO</span>
+    </div>
+  </div>
+  <nav class="nav-panel" id="navPanel" aria-label="章节">
+    <div class="nav-head"><span>Progress / 01—11</span><b id="navPct">0%</b></div>
+    <div class="nav-bar"><i id="navRail"></i></div>
+    <div class="nav-current"><b id="navNow">01 项目信息</b><span id="navNext">→ 02 需求</span></div>
+    <div class="nav-list" id="navList">
+      <a href="#s01" data-num="01" class="on"><b>01</b><span>项目信息</span></a>
+      <a href="#s02" data-num="02"><b>02</b><span>需求</span></a>
+      <a href="#s03" data-num="03"><b>03</b><span>素材</span></a>
+      <a href="#s04" data-num="04"><b>04</b><span>品牌预设</span></a>
+      <a href="#s05" data-num="05"><b>05</b><span>版式</span></a>
+      <a href="#s06" data-num="06"><b>06</b><span>文案</span></a>
+      <a href="#s07" data-num="07"><b>07</b><span>动效</span></a>
+      <a href="#s08" data-num="08"><b>08</b><span>交付物</span></a>
+      <a href="#s09" data-num="09"><b>09</b><span>禁忌</span></a>
+      <a href="#s10" data-num="10"><b>10</b><span>验收</span></a>
+      <a href="#s11" data-num="11"><b>11</b><span>预设参考</span></a>
+      <a href="#disclaimer" data-num="—"><b>—</b><span>免责申明</span></a>
+    </div>
+  </nav>
+</header>
+
+<div class="demo-bar">DEMO / 展示版 · 不提供导出</div>
+
+<header class="hero">
+  <div class="hero-media">
+    <span class="hm">YOYA — VISUAL IDENTITY / 2026</span>
+    <img class="mark" src="assets/img/yoya-mark-ink.svg" alt="">
+  </div>
+  <div class="hero-panel">
+    <div class="eyebrow">PROJECT BRIEF / 01—11</div>
+    <h1>把需求，<br>说清楚。</h1>
+    <p class="hero-lede">这是展示版：可以填、可以勾，但不提供导出。完整版请向 YOYA 索取。</p>
+    <a class="hero-cta" href="#s01">开始填写 ↓</a>
+    <div class="hero-meta"><span>项目简报 · 展示版 / 可浏览 / 不导出</span><span>SCROLL →</span></div>
+  </div>
+</header>
+
+<div class="shell">
+  <main class="doc">
+
+  <!-- 01 项目信息 -->
+  <section id="s01">
+    <h2><span class="num">01</span>项目信息</h2>
+    <p class="desc">先给项目一个名字和一句话定位。</p>
+    <div class="row">
+      <div class="field"><label>项目名</label><input id="p-name" placeholder="例如：YOYA 品牌包装"></div>
+      <div class="field"><label>一句话定位</label><input id="p-pos" placeholder="例如：把痕迹，留在墙上。"></div>
+      <div class="field"><label>交付日期</label><input id="p-date" placeholder="例如：2026-11-20"></div>
+    </div>
+    <div class="group-title">出口（勾选，可多选）</div>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="o-web" checked>网页（1440 / 390）</label>
+      <label class="opt"><input type="checkbox" id="o-a4">A4 印刷（300dpi）</label>
+      <label class="opt"><input type="checkbox" id="o-social">3:4 社媒（1080×1440）</label>
+      <label class="opt"><input type="checkbox" id="o-other">其他 <input id="o-other-txt" class="other" placeholder="写出来"></label>
+    </div>
+  </section>
+
+  <!-- 02 需求 -->
+  <section id="s02">
+    <h2><span class="num">02</span>需求</h2>
+    <p class="desc">这一页最重要的部分：要解决什么、什么必须做、什么不能做。</p>
+    <div class="row">
+      <div class="field"><label>要解决什么 / 给谁看</label><textarea id="n-what"></textarea></div>
+      <div class="field"><label>必做（硬性）</label><textarea id="n-must"></textarea></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>不做（红线）</label><textarea id="n-not"></textarea></div>
+      <div class="field"><label>参考（链接 / 截图 / 关键词）</label><textarea id="n-ref"></textarea></div>
+    </div>
+    <div class="group-title">大段文字</div>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="lf-yes">需要</label>
+      <label class="opt"><input type="checkbox" id="lf-a4">A4 两栏</label>
+      <label class="opt"><input type="checkbox" id="lf-social">3:4 单栏</label>
+    </div>
+  </section>
+
+  <!-- 03 素材 -->
+  <section id="s03">
+    <h2><span class="num">03</span>素材</h2>
+    <p class="desc">有就填路径，没有写「无」，我用占位。新项目在这里预留位。</p>
+    <table class="mat">
+      <tr><th>角色</th><th>文件路径</th><th>备注</th></tr>
+      <tr><td>主标识（横版/竖版）</td><td><input id="m-primary"></td><td>黑 / 白 / 透明底</td></tr>
+      <tr><td>图形标</td><td><input id="m-mark"></td><td>独立符号</td></tr>
+      <tr><td>主视觉 / 底图</td><td><input id="m-visual"></td><td>墙面、海报图等</td></tr>
+      <tr><td>纹理（等高线/纸纹）</td><td><input id="m-texture"></td><td>可选</td></tr>
+      <tr><td>字体文件</td><td><input id="m-font"></td><td>无则用 Google Fonts</td></tr>
+      <tr><td>文案稿</td><td><input id="m-copy"></td><td>无则用占位</td></tr>
+      <tr><td><input id="m-x1-n" placeholder="角色（可空）"></td><td><input id="m-x1-p" placeholder="路径（可空）"></td><td>额外</td></tr>
+      <tr><td><input id="m-x2-n" placeholder="角色（可空）"></td><td><input id="m-x2-p" placeholder="路径（可空）"></td><td>额外</td></tr>
+    </table>
+  </section>
+
+  <!-- 04 品牌预设 -->
+  <section id="s04">
+    <h2><span class="num">04</span>品牌预设</h2>
+    <p class="desc">不勾就用这套。这套是 v1.0 的默认。</p>
+    <div class="group-title">底色</div>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="b-paper" checked>纸白 #F5F5F5</label>
+      <label class="opt"><input type="checkbox" id="b-ink">墨黑 #1B1B18</label>
+      <label class="opt"><input type="checkbox" id="b-other">其他 <input id="b-other-txt" class="other" placeholder="色值"></label>
+    </div>
+    <div class="group-title">强调色（只做信号）</div>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="a-mintred" checked>薄荷 #8EC3A5 ＋ 信号红 #F40101</label>
+      <label class="opt"><input type="checkbox" id="a-other">改 <input id="a-other-txt" class="other" placeholder="色值"></label>
+    </div>
+    <div class="group-title">页面规则</div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="page-rule" value="auto" checked>按内容自动</label>
+      <label class="opt"><input type="radio" name="page-rule" value="fixed">固定 <input id="pg-count" class="other" placeholder="页数" oninput="document.querySelector('input[name=page-rule][value=fixed]').checked=true"></label>
+      <label class="opt"><input type="radio" name="page-rule" value="single">单页</label>
+    </div>
+    <div class="field"><label>增删页说明</label><input id="pg-note" placeholder="例如：素材多就多拆两页；不要合并 03"></div>
+
+    <div class="group-title">导航</div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="nav-style" value="mint" checked>薄荷 20vh 抽屉</label>
+      <label class="opt"><input type="radio" name="nav-style" value="ink">墨黑 20vh 抽屉</label>
+      <label class="opt"><input type="radio" name="nav-style" value="plain">普通吸顶</label>
+    </div>
+
+    <div class="group-title">纹理</div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="tex-style" value="current" checked>当前</label>
+      <label class="opt"><input type="radio" name="tex-style" value="strong">更强</label>
+      <label class="opt"><input type="radio" name="tex-style" value="off">关闭</label>
+    </div>
+
+    <div class="group-title">红色</div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="red-style" value="current" checked>当前（logo + 每版一处）</label>
+      <label class="opt"><input type="radio" name="red-style" value="quiet">更克制</label>
+      <label class="opt"><input type="radio" name="red-style" value="bold">更强调</label>
+    </div>
+
+    <div class="group-title">字体</div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="type-style" value="three" checked>三件套</label>
+      <label class="opt"><input type="radio" name="type-style" value="sans">单黑体</label>
+      <label class="opt"><input type="radio" name="type-style" value="custom">自定义 <input id="type-custom" class="other" placeholder="字体名/链接" oninput="document.querySelector('input[name=type-style][value=custom]').checked=true"></label>
+    </div>
+
+    <div class="group-title">输出</div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="output-style" value="web" checked>网页（海报）</label>
+      <label class="opt"><input type="radio" name="output-style" value="all">网页 + A4 + 3:4</label>
+      <label class="opt"><input type="radio" name="output-style" value="html">仅 HTML</label>
+    </div>
+  </section>
+
+  <!-- 05 版式 -->
+  <section id="s05">
+    <h2><span class="num">05</span>版式 / 排版偏好</h2>
+    <p class="desc">五种版面循环套在按内容生成的正文页；页数不固定。这里只定风格、特征与页头结构。</p>
+    <div class="row">
+      <div class="field"><label>风格</label><input id="s-style" placeholder="美术馆藏品页 / 瑞士网格 / 电子杂志…"></div>
+      <div class="field"><label>关键特征</label><input id="s-feature" placeholder="大留白 / 深色横带 / 出血图…"></div>
+      <div class="field"><label>页头结构</label><input id="s-head" placeholder="56/44 分栏 / 满幅 / 居中…"></div>
+    </div>
+  </section>
+
+  <!-- 06 文案 -->
+  <section id="s06">
+    <h2><span class="num">06</span>文案</h2>
+    <p class="desc">没有就沿用当前版本；有就在这里给我。</p>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="c-keep" checked>沿用当前版本</label>
+      <label class="opt"><input type="checkbox" id="c-new">我另给</label>
+    </div>
+    <div class="row">
+      <div class="field"><label>主标题</label><input id="c-title"></div>
+      <div class="field"><label>副标题 / 导语</label><input id="c-sub"></div>
+      <div class="field"><label>落款邮箱</label><input id="c-mail" placeholder="hello@…"></div>
+    </div>
+  </section>
+
+  <!-- 07 动效 -->
+  <section id="s07">
+    <h2><span class="num">07</span>动效</h2>
+    <p class="desc">默认勾选当前模板这 8 个（时差包含在 fade 里）；其余不启用。勾哪个挂哪个，Agent 会接入真实页面滚动。</p>
+    <div class="group-title">滚动</div>
+    <div class="grid">
+      <label class="opt"><input type="checkbox" class="mo" data-id="fade" checked>fade 淡入 + 时差</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="parallax">parallax 视差</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="sticky" checked>sticky 吸顶</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="pin">pin 固定</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="horizontal">horizontal 横滚</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="snap" checked>snap 吸附</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="progress">progress 进度条</label>
+    </div>
+    <div class="group-title">交互</div>
+    <div class="grid">
+      <label class="opt"><input type="checkbox" class="mo" data-id="highlight">highlight 高亮</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="lift" checked>lift 上浮</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="zoom">zoom 放大</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="magnetic">magnetic 磁吸</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="ripple" checked>ripple 涟漪</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="underline" checked>underline 下划线</label>
+    </div>
+    <div class="group-title">媒体</div>
+    <div class="grid">
+      <label class="opt"><input type="checkbox" class="mo" data-id="compare">compare 对比滑块</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="preloader">preloader 预加载</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="lazy">lazy 懒加载</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="infinite">infinite 无限滚动</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="transition" checked>transition 转场</label>
+    </div>
+    <div class="group-title">氛围</div>
+    <div class="grid">
+      <label class="opt"><input type="checkbox" class="mo" data-id="smooth">smooth 平滑滚动</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="gradient">gradient 渐变</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="float">float 漂浮</label>
+      <label class="opt"><input type="checkbox" class="mo" data-id="marquee">marquee 跑马灯</label>
+    </div>
+  </section>
+
+  <!-- 08 交付物 -->
+  <section id="s08">
+    <h2><span class="num">08</span>交付物</h2>
+    <p class="desc">勾你要的，我按这个出。</p>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="d-html" checked>HTML 源码</label>
+      <label class="opt"><input type="checkbox" id="d-pdf">PDF（A4）</label>
+      <label class="opt"><input type="checkbox" id="d-300">300dpi PNG</label>
+      <label class="opt"><input type="checkbox" id="d-social">社媒 PNG 1080×1440</label>
+      <label class="opt"><input type="checkbox" id="d-export">导出文件夹（SVG + 透明 PNG）</label>
+    </div>
+  </section>
+
+  <!-- 09 禁忌 -->
+  <section id="s09">
+    <h2><span class="num">09</span>禁忌 / 规则</h2>
+    <p class="desc">这些默认生效，要改就在这里说。</p>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="t-emoji" checked>不 emoji、不装饰图标</label>
+      <label class="opt"><input type="checkbox" id="t-grad" checked>渐变只限 hero / 暗场</label>
+      <label class="opt"><input type="checkbox" id="t-3color" checked>单页主色 ≤3</label>
+      <label class="opt"><input type="checkbox" id="t-red" checked>红色每版只一处</label>
+      <label class="opt"><input type="checkbox" id="t-tex" checked>等高线纹理叠加（黑底 screen）</label>
+    </div>
+  </section>
+
+  <!-- 10 验收 -->
+  <section id="s10">
+    <h2><span class="num">10</span>验收</h2>
+    <p class="desc">我出图后，按这几条对照。</p>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="v-overflow">320/390/768/1024/1440 无横向溢出</label>
+      <label class="opt"><input type="checkbox" id="v-console">无 console 错误、图片全载</label>
+      <label class="opt"><input type="checkbox" id="v-copy">占位邮箱/文案已替换</label>
+      <label class="opt"><input type="checkbox" id="v-red">红色只出现在信号处</label>
+    </div>
+  </section>
+
+  <!-- 11 预设：v1.0 运行手册 -->
+  <section id="s11" class="dark">
+    <h2><span class="num">11</span>预设参考</h2>
+    <p class="desc">不勾选就沿用这套。完整说明见 <code>v1.0/README.md</code>。</p>
+
+    <div class="group-title">文件</div>
+    <table class="mat">
+      <tr><th>文件</th><th>尺寸</th><th>用途</th></tr>
+      <tr><td>index.html</td><td>1440 × 900</td><td>网页首屏；≤900 堆叠</td></tr>
+      <tr><td>a4.html</td><td>210 × 297 mm</td><td>A4 海报；Chrome 打印 PDF</td></tr>
+      <tr><td>social-3x4.html / -02 / -03 / -04</td><td>1080 × 1440</td><td>3:4 系列 01–04</td></tr>
+      <tr><td>longform-a4.html</td><td>210 × 297 mm</td><td>A4 长文；两栏 + 首字下沉</td></tr>
+      <tr><td>assets/css/v1.css</td><td>—</td><td>共用 tokens / 版式</td></tr>
+    </table>
+
+    <div class="group-title">红色规则（每版只一处）</div>
+    <div class="note">
+      网页主 CTA／A4 联系块／3:4-01 CTA 条／3:4-02 的 29.5° 数据块／3:4-03 写邮件条／长文引语竖线；
+      除此之外不再出现额外的红。红色是“注意/行动”的信号，不是装饰。
+    </div>
+
+    <div class="group-title">Tokens</div>
+    <pre class="code">--paper:#F5F5F5; --paper-soft:#FBFBFB; --ink:#1B1B18;
+--line:#DEDEDE; --muted:#6B6B6B; --mint:#8EC3A5; --red:#F40101;</pre>
+
+    <div class="group-title">纹理</div>
+    <div class="note">
+      等高线瓦片 <code>motion/lib/yoya-texture-contour-tile.png</code>：<code>1100px</code> 平铺；
+      黑色块与“黑→透明”渐变共用同一条纹理（同瓦片、同相位），透明度跟着 mask 一起淡出，
+      清晰照片上不铺；hero 底部渐变单独一层 <code>8%</code>；导航抽屉不铺纹理。
+      v1.0 暗场仍单独 <code>30%</code>。
+    </div>
+
+    <details class="out">
+      <summary>重新导出命令（Chrome headless）</summary>
+      <textarea readonly class="cmd"># 网页 1440
+chrome --headless=new --hide-scrollbars --window-size=1440,900 --screenshot=exports/yoya-web-1440-v1.0.png index.html
+# A4 PDF
+chrome --headless=new --no-pdf-header-footer --print-to-pdf=exports/yoya-poster-a4-v1.0.pdf a4.html
+# 3:4
+chrome --headless=new --hide-scrollbars --window-size=1080,1440 --screenshot=exports/yoya-social-3x4-01-statement-1080-v1.0.png social-3x4.html
+# 300dpi
+chrome --headless=new --hide-scrollbars --force-device-scale-factor=3.125 --window-size=794,1123 --screenshot=exports/yoya-poster-a4-300dpi-v1.0.png a4.html</textarea>
+    </details>
+
+    <div class="group-title">怎么改</div>
+    <div class="note">
+      文案 → 直接改 HTML 中文；颜色/字体 → 只改 <code>assets/css/v1.css</code> 的 <code>:root</code>；
+      图片 → 换 <code>assets/img/</code> 同名文件；新尺寸 → 复制对应 HTML，改画布与 h1 字号。
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<section class="disclaimer" id="disclaimer" aria-label="免责申明">
+  <div class="disc-inner">
+    <img class="disc-mark" src="assets/img/yoya-logo-primary-light.webp" alt="YOYA">
+    <p class="disc-eyebrow">Disclaimer / 使用说明</p>
+    <h2>这是一份工作文档，<br>不是法律文件。</h2>
+    <div class="disc-cols">
+      <p><b>01 / 素材授权</b>模板中的品牌、字体、图片与文案仅用于 YOYA 项目提案与内部协作；对外发布前，请确认素材授权、肖像权与商标使用范围。</p>
+      <p><b>02 / 占位内容</b>表单里的示例文字、邮箱、尺寸都是占位。生成简报后，请把「【未填】」替换成真实内容，再进入制作。</p>
+      <p><b>03 / 印刷色差</b>屏幕 RGB 与印刷 CMYK 存在色差；A4 出血、安全边距与专色需在印前确认，最终以打样为准。</p>
+      <p><b>04 / 专业意见</b>本模板不构成法律、财务或版权意见；涉及第三方素材时，请自行取得授权并保留凭证。</p>
+    </div>
+    <div class="disc-foot"><span>YOYA — PROJECT BRIEF / 2026</span><a href="#top">回到顶部 ↑</a></div>
+  </div>
+</section>
+
+<div class="wipe" id="wipe" aria-hidden="true"><img class="wipe-logo" src="assets/img/yoya-logo-primary-light.webp" alt=""></div>
+
+<script type="text/plain" id="yo-contract">
+## CONTRACT — YOYA 视觉与动效（锁定；只按 STYLE 放行）
+> CONTENT 的文本可改；STYLE 中已选择的项可按选值调整；其余资产/色板/字体/纹理/版式/导航/动效/红色语义/字段全部锁定。
+
+### 0. 可变与不可变
+- 可变：CONTENT 中的项目名、定位、日期、需求、素材路径、文案；STYLE 中已选择的页面规则、导航、纹理强度、红色强度、字体、输出。
+- 不可变：logo（红切角 29.5°）、tokens、字体角色（除字体选项）、纹理来源/瓦片、5 种版面、导航机制、动效实现、红色语义、表单字段。
+- 这是输入文档，不是最终网页：不要交付表单本身；用 CONTENT 生成真实页面。
+- OUTPUT=web：单页网页海报，移动优先，直接可部署 GitHub Pages；不要生成表单页或多页说明文档。
+
+### A. 资产（本分享包内相对路径）
+- 模板：`index.html`
+- 白色横标：`assets/img/yoya-logo-primary-light.webp`
+- 黑色横标：`assets/img/yoya-logo-primary.webp`
+- 图形标：`assets/img/yoya-mark-ink.svg` / `assets/img/yoya-mark-white.svg`
+- 墙面：`assets/img/yoya-wall-mint-2400.webp` / `assets/img/yoya-wall-mint-detail-960.webp`
+- 纹理：`motion/lib/yoya-texture-contour-tile.png`（960×1162，白线透明；1100px 平铺）
+- 动效库：`motion/lib/yoya-motion.js` + `.css`
+- 字体：Google Fonts；Noto Sans SC 900（Display）/ Noto Serif SC 400（Body）/ Inter Tight 500–600（Label）
+
+### B. 色板
+--paper:#F5F5F5; --paper-soft:#FBFBFB; --paper-deep:#E9E9E9;
+--ink:#1B1B18; --muted:#6B6B6B; --line:#DEDEDE;
+--mint:#8EC3A5; --mint-deep:#4F7C63; --red:#F40101;
+
+### C. 页面与版式
+- 页数按 STYLE：auto=按 CONTENT 信息量决定；fixed=N 页；single=单页。不硬凑、不硬拆。
+- 5 种版面：poster / statement / material / contact / form；按页循环，每次随机起点；每页一条 band，form 页可不配图。
+- band 桌面 300px；form 148px；copy 56%；art 宽 36/46/44/36%。≤760 改 block，art 120px。
+- 当前 6 页（01+02 / 03 / 04+05 / 06+07 / 08+09+10 / 11）只是示例，不是固定页数。
+- 每页内容按 CONTENT；模板表单字段本身保留，但不要把表单当成品交付。
+
+### D. 导航
+- topbar 56px（≤600 54px），墨黑；展开为满宽 × 20vh（min 170px）薄荷抽屉，默认不铺纹理。
+- 抽屉 grid：1fr 20vw；左进度（大号百分比 + 2px 横线 + 当前/下一节），右目录按实际页数 N（2×ceil(N/2)），不是固定 11。
+- hover 展开、点击固定、外部/Esc 关闭；移动端点顶栏展开；无独立触发器。
+- 导航项=实际页面；进度按页面滚动。
+
+### E. 纹理
+- 同一个 tile、同一相位；黑块 screen；statement 整条 band 一层纹理 opacity .1，mask 0–54% 实、70.6% 透明；hero 底部 .08；topbar .065；section 11 .0585；disclaimer .05；导航不铺；v1.0 暗场 .30。
+- STYLE=更强：以上 opacity ×1.5；关闭：全部 0。
+
+### F. 动效
+- 只从 22 个 id 中按 STYLE 勾选使用；未勾不启用；不得新造动效。实现见 `motion/lib/yoya-motion.js`。
+- 默认：underline, sticky, snap, fade（含时差）, lift, ripple, transition。
+- 转场：薄荷从 topbar 下方展开；白色横标居中；520ms 滚动 / 700ms 收回 20vh / 1250ms 复位；顶栏始终可见。
+- 禁用高亮/荧光笔；不新增其他动效。
+
+### G. 红色
+- #F40101 只用于：logo 切角 + 每页一个主 CTA/重点。
+- STYLE=更克制：只保留 logo 切角 + 主 CTA；更强调：可增加一个重点数据/标题，但每页仍只一处红。
+- 章节号 ink；导航/进度 mint；statement 条 mint；contact 条红；poster 红块；material 数据块纸白；disclaimer eyebrow mint。
+
+### H. 禁止
+- 不改 tokens/logo/纹理来源/5 种版面/导航机制/动效实现/字段；不加 emoji；不把纹理铺满照片；不在导航铺纹理；不引入第二套红；不删字段；不交付表单/截图。
+
+### English digest (for the Agent)
+- CONTENT is the only editable text. STYLE selects page rule, nav, texture, red, font, output.
+- Keep YOYA tokens, logo, 29.5° cut, texture tile, 5 layout archetypes, nav/motion mechanics, and red semantics.
+- Page count is content-driven; nav/TOC/progress follow actual pages.
+- Use `assets/img` and `motion/lib` inside this share folder; never fetch external images.
+- Ship a real HTML page, not a screenshot or the form.
+- Reply to the user in Chinese.
+</script>
+<script>
+function v(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+function ck(id){ var e=document.getElementById(id); return e&&e.checked; }
+function q(id){ return v(id)||'【未填】'; }
+function rv(name){
+  var e=document.querySelector('input[name="'+name+'"]:checked');
+  return e?e.value:'';
+}
+
+function gen(){
+  var L=[];
+  var mo=[].map.call(document.querySelectorAll('.mo:checked'),function(e){return e.getAttribute('data-id');});
+  var pages={auto:'按内容自动',fixed:'固定 '+(v('pg-count')||'【未填】')+' 页',single:'单页'};
+  var navs={mint:'薄荷 20vh 抽屉',ink:'墨黑 20vh 抽屉',plain:'普通吸顶'};
+  var texs={current:'当前',strong:'更强',off:'关闭'};
+  var reds={current:'当前（logo + 每版一处）',quiet:'更克制',bold:'更强调'};
+  var types={three:'三件套',sans:'单黑体',custom:'自定义（'+(v('type-custom')||'【未填】')+'）'};
+  var outs={web:'网页（单页海报，移动优先，GitHub Pages 可直传）',all:'网页 + A4 + 3:4',html:'仅 HTML'};
+  var page=rv('page-rule')||'auto', nav=rv('nav-style')||'mint', tex=rv('tex-style')||'current';
+  var red=rv('red-style')||'current', type=rv('type-style')||'three', outS=rv('output-style')||'web';
+  var online = location.protocol==='http:' || location.protocol==='https:';
+  var pageHref = location.href.split('#')[0];
+  var assetRef = online ? new URL('assets/img/', pageHref).href : 'assets/img';
+  var texRef = online ? new URL('motion/lib/yoya-texture-contour-tile.png', pageHref).href : 'motion/lib/yoya-texture-contour-tile.png';
+  L.push('# YOYA · 项目简报 / 可移植构建契约 v1.0');
+  L.push('');
+  L.push('> 交付：把本 .md 拖给本地 Agent。只改 CONTENT；STYLE 为已选风格；CONTRACT 锁定。');
+  L.push('> 模板：`'+(online?pageHref:'index.html')+'`');
+  L.push('> 资产：`'+assetRef+'`；纹理：`'+texRef+'`');
+  if(online) L.push('> 联网版：以上为公开 URL；本地版用 `assets/img` / `motion/lib`。');
+  L.push('');
+  L.push('## CONTENT / 只改这里');
+  L.push('');
+  L.push('- 项目名：'+q('p-name'));
+  L.push('- 一句话定位：'+q('p-pos'));
+  L.push('- 交付日期：'+q('p-date'));
+  L.push('- 出口：'+pick(['o-web','o-a4','o-social'],['网页','A4 印刷','3:4 社媒'])+ (ck('o-other')?(' 其他('+q('o-other-txt')+')'):''));
+  L.push('');
+  L.push('## 需求');
+  L.push('- 要解决什么：'+q('n-what'));
+  L.push('- 必做：'+q('n-must'));
+  L.push('- 不做：'+q('n-not'));
+  L.push('- 参考：'+q('n-ref'));
+  L.push('- 大段文字：'+ (ck('lf-yes')?('需要('+pick(['lf-a4','lf-social'],['A4 两栏','3:4 单栏'])+')'):'不需要'));
+  L.push('');
+  L.push('## 素材');
+  mat('主标识',v('m-primary')); mat('图形标',v('m-mark')); mat('主视觉',v('m-visual'));
+  mat('纹理',v('m-texture')); mat('字体',v('m-font')); mat('文案',v('m-copy'));
+  if(v('m-x1-n')||v('m-x1-p')) L.push('- '+(v('m-x1-n')||'额外')+'：'+(v('m-x1-p')||'【未填】'));
+  if(v('m-x2-n')||v('m-x2-p')) L.push('- '+(v('m-x2-n')||'额外')+'：'+(v('m-x2-p')||'【未填】'));
+  L.push('');
+  L.push('## 品牌预设');
+  L.push('- 底色：'+pick(['b-paper','b-ink'],['纸白 #F5F5F5','墨黑 #1B1B18'])+ (ck('b-other')?(' 其他('+q('b-other-txt')+')'):''));
+  L.push('- 强调色：'+ (ck('a-mintred')?'薄荷 #8EC3A5 + 信号红 #F40101':'') + (ck('a-other')?(' 改('+q('a-other-txt')+')'):''));
+  L.push('');
+  L.push('## 版式');
+  L.push('- 风格：'+q('s-style'));
+  L.push('- 特征：'+q('s-feature'));
+  L.push('- 页头：'+q('s-head'));
+  L.push('');
+  L.push('## 文案');
+  L.push('- '+ (ck('c-keep')?'沿用当前':'另给') + (ck('c-new')?(' 新稿：') : ''));
+  L.push('- 主标题：'+q('c-title'));
+  L.push('- 副标题：'+q('c-sub'));
+  L.push('- 邮箱：'+q('c-mail'));
+  L.push('');
+  L.push('## 交付物');
+  L.push(pick(['d-html','d-pdf','d-300','d-social','d-export'],['HTML','PDF','300dpi PNG','社媒 PNG','导出文件夹']));
+  L.push('');
+  L.push('## 禁忌');
+  L.push(pick(['t-emoji','t-grad','t-3color','t-red','t-tex'],['不emoji','渐变限hero/暗场','单页主色≤3','红色每版一处','纹理叠加']));
+  L.push('');
+  L.push('## 验收');
+  L.push(pick(['v-overflow','v-console','v-copy','v-red'],['无溢出','无错误图片全载','占位已替换','红色只在信号']));
+  L.push('');
+  L.push('## STYLE（已选）');
+  L.push('- 页面规则：'+(pages[page]||page));
+  L.push('- 版式：5 种版面循环（poster / statement / material / contact / form）');
+  L.push('- 导航：'+(navs[nav]||nav));
+  L.push('- 纹理：'+(texs[tex]||tex));
+  L.push('- 红色：'+(reds[red]||red));
+  L.push('- 字体：'+(types[type]||type));
+  L.push('- 动效：'+(mo.length?mo.join(', '):'（无）'));
+  L.push('- 输出：'+(outs[outS]||outS));
+  L.push('- 移动端：默认适配手机（390 / 320 无横向溢出；表单单列，顶栏按钮常驻）');
+  if(v('pg-note')) L.push('- 增删页说明：'+v('pg-note'));
+  L.push('');
+  L.push(document.getElementById('yo-contract').textContent.trim());
+  L.push('');
+  L.push('## BUILD STEPS（给 Agent）');
+  L.push('1. 打开 `index.html` 作为视觉母版；这是输入文档，不是成品。');
+  L.push('2. 只替换 CONTENT 的文本、标题、项目名、日期、需求、素材路径与文案；按 STYLE 应用已选风格。');
+  L.push('3. 不要改 tokens、字体、logo、纹理来源、5 种版面、导航机制、动效实现、红色语义与字段。');
+  L.push('4. 素材按上面的资产 URL（联网版）或 `assets/img`（本地版）；动效库在 `motion/lib/`；不联网取图；字体用 Google Fonts，离线用系统 fallback。');
+  L.push('5. 生成真实页面，按 ACCEPTANCE 自检；不要交付截图、图片或表单本身；用中文回复用户。');
+  L.push('');
+  L.push('## ACCEPTANCE（逐条对照）');
+  L.push('- 1440 / 390 打开：无横向溢出、无 console 错误、图片全载。');
+  L.push('- 页数按 STYLE；5 种版面按页循环；每页一条 band；导航项=实际页数。');
+  L.push('- 导航按 STYLE（薄荷/墨黑/普通）；进度在左、目录在右；hover/点击固定/外部关闭正常。');
+  L.push('- 红色按 STYLE；纹理同相位无接缝；末页无空白。');
+  L.push('- 导出的 .md 同时含 CONTENT、STYLE、CONTRACT；不依赖压缩包或外网。');
+  L.push('');
+  L.push('### 中文沟通');
+  L.push('- Agent 对用户的汇报、提问、交付说明一律用中文；代码/注释可用英文。');
+
+  function mat(name,val){ if(val) L.push('- '+name+'：'+val); }
+  function pick(ids,labels){ var r=[]; for(var i=0;i<ids.length;i++){ if(ck(ids[i])) r.push(labels[i]); } return r.length?r.join('、'):'【未勾选】'; }
+
+  var out=L.join('\n');
+  var box=document.getElementById('out');
+  box.value=out;
+  var details=box.closest('details');
+  if(details) details.open=true;
+  var base=(v('p-name')||'YOYA').replace(/[\\/:*?"<>|]/g,'-').replace(/\s+/g,'-').slice(0,40)||'YOYA';
+  saveFile(base+'-构建指令.md', out);
+}
+function toast(msg){
+  var ok=document.getElementById('ok');
+  ok.textContent=msg;
+  ok.style.display='inline';
+  clearTimeout(toast.t);
+  toast.t=setTimeout(function(){ok.style.display='none';},3200);
+}
+async function saveFile(name,text){
+  if(window.showSaveFilePicker){
+    try{
+      var h=await window.showSaveFilePicker({
+        suggestedName:name,
+        types:[{description:'Markdown',accept:{'text/markdown':['.md']}}]
+      });
+      var w=await h.createWritable();
+      await w.write(text);
+      await w.close();
+      toast('✓ 已保存 .md，拖给 Agent');
+      return;
+    }catch(e){
+      if(e && e.name==='AbortError') return;
+    }
+  }
+  download(name,text);
+  toast('✓ 已导出 .md，拖给 Agent');
+}
+function download(name,text){
+  var blob=new Blob([text],{type:'text/markdown;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },8000);
+}
+
+(function(){
+  var topbar=document.querySelector('.topbar');
+  var panel=document.getElementById('navPanel');
+  var now=document.getElementById('navNow');
+  var next=document.getElementById('navNext');
+  var pct=document.getElementById('navPct');
+  var rail=document.getElementById('navRail');
+  var links=[].slice.call(document.querySelectorAll('#navList a'));
+  var targets=links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+
+  function closeNav(){
+    topbar.classList.remove('nav-open');
+    if(topbar.matches(':hover')) topbar.classList.add('force-closed');
+    else topbar.classList.remove('force-closed');
+  }
+  topbar.addEventListener('click',function(e){
+    if(e.target.closest('.copy-btn, .brand, .nav-panel, .ok')) return;
+    var on=!topbar.classList.contains('nav-open');
+    topbar.classList.toggle('nav-open',on);
+    topbar.classList.toggle('force-closed',!on && topbar.matches(':hover'));
+  });
+  topbar.addEventListener('mouseleave',function(){ topbar.classList.remove('force-closed'); });
+  document.addEventListener('click',function(e){ if(!topbar.contains(e.target)) closeNav(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeNav(); });
+  panel.addEventListener('click',function(e){ if(e.target.closest('a')) closeNav(); });
+
+  function labelOf(a){ return (a.getAttribute('data-num')||'—')+' '+a.querySelector('span').textContent; }
+  function setActive(i){
+    links.forEach(function(a,j){ a.classList.toggle('on',j===i); });
+    var a=links[i]; if(!a) return;
+    now.textContent=labelOf(a);
+    next.textContent=links[i+1]?'→ '+labelOf(links[i+1]):'';
+  }
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        if(!en.isIntersecting) return;
+        var i=targets.indexOf(en.target);
+        if(i>-1) setActive(i);
+      });
+    },{rootMargin:'-16% 0px -62% 0px'});
+    targets.forEach(function(s){ if(s) io.observe(s); });
+  }
+
+  function onScroll(){
+    var max=document.documentElement.scrollHeight-window.innerHeight;
+    var p=max>0?Math.min(1,Math.max(0,window.scrollY/max)):0;
+    pct.textContent=Math.round(p*100)+'%';
+    rail.style.width=(p*100)+'%';
+    topbar.classList.toggle('is-stuck',window.scrollY>8);
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  onScroll();
+
+  /* 淡入 + 时差 */
+  var groups=document.querySelectorAll('.row, .opts, .grid');
+  Array.prototype.forEach.call(groups,function(g){
+    Array.prototype.forEach.call(g.children,function(el,i){
+      el.classList.add('reveal');
+      el.style.setProperty('--i',i);
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('section h2, section .desc, section .group-title, section table.mat, section details.out, .disc-inner > *'),function(el){
+    el.classList.add('reveal');
+  });
+  var revs=[].slice.call(document.querySelectorAll('.reveal'));
+  if('IntersectionObserver' in window){
+    var rio=new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add('in'); rio.unobserve(en.target); }
+      });
+    },{rootMargin:'0px 0px -8% 0px',threshold:.05});
+    revs.forEach(function(el){ rio.observe(el); });
+  } else { revs.forEach(function(el){ el.classList.add('in'); }); }
+
+  /* 涟漪 */
+  document.addEventListener('click',function(e){
+    var el=e.target.closest('.hero-cta, .copy-btn, .nav-trigger');
+    if(!el) return;
+    var r=el.getBoundingClientRect();
+    var size=Math.max(r.width,r.height)*1.2;
+    var s=document.createElement('span');
+    s.className='rip';
+    s.style.width=s.style.height=size+'px';
+    s.style.left=(e.clientX-r.left-size/2)+'px';
+    s.style.top=(e.clientY-r.top-size/2)+'px';
+    s.style.background=el.classList.contains('copy-btn')?'rgba(27,27,24,.22)':'rgba(255,255,255,.34)';
+    el.appendChild(s);
+    setTimeout(function(){ s.remove(); },600);
+  });
+
+  /* 页面转场 */
+  var wipe=document.getElementById('wipe');
+  var busy=false;
+  var wipeTimers=[];
+  function goTo(target){
+    if(!target||busy) return;
+    busy=true;
+    wipeTimers.forEach(clearTimeout); wipeTimers=[];
+    wipe.classList.remove('out');
+    wipe.classList.add('run');
+    wipeTimers.push(setTimeout(function(){
+      var y=target.getBoundingClientRect().top+window.scrollY-52;
+      window.scrollTo({top:Math.max(0,y),behavior:'auto'});
+    },520));
+    wipeTimers.push(setTimeout(function(){ wipe.classList.add('out'); },700));
+    wipeTimers.push(setTimeout(function(){
+      wipe.style.transition='none';
+      wipe.classList.remove('run','out');
+      void wipe.offsetHeight;
+      wipe.style.transition='';
+      busy=false;
+    },1250));
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[href^="#"]');
+    if(!a) return;
+    var target=document.querySelector(a.getAttribute('href'));
+    if(!target) return;
+    e.preventDefault();
+    closeNav();
+    goTo(target);
+  });
+
+  /* 正文页 · 六页合并 + 五种版面循环 */
+  (function(){
+    var lays=['poster','statement','material','contact','form'];
+    var groups=[
+      ['s01','s02'],
+      ['s03'],
+      ['s04','s05'],
+      ['s06','s07'],
+      ['s08','s09','s10']
+    ];
+    var off=Math.floor(Math.random()*lays.length);
+    function esc(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+    groups.forEach(function(ids,gi){
+      var sec=document.getElementById(ids[0]);
+      if(!sec||sec.querySelector('.sec-band')) return;
+      var h2=sec.querySelector('h2'), desc=sec.querySelector('.desc');
+      if(!h2) return;
+      var lay=lays[(gi+off)%lays.length];
+      var numEl=h2.querySelector('.num');
+      var num=numEl?numEl.textContent.trim():'';
+      var title=h2.textContent.replace(num,'').trim();
+      var band=document.createElement('div'); band.className='sec-band'; band.dataset.lay=lay;
+      var copy=document.createElement('div'); copy.className='sec-copy';
+      copy.appendChild(h2); if(desc) copy.appendChild(desc);
+      var art=document.createElement('div'); art.className='sec-art'; art.setAttribute('aria-hidden','true');
+      var tag={poster:'A4 POSTER',statement:'STATEMENT',material:'MATERIAL',contact:'CONTACT',form:'FORM'}[lay];
+      var html='<span class="art-tag">'+tag+' / '+esc(num)+'</span>';
+      if(lay==='poster'){
+        html+='<div class="art-photo"></div>'+
+          '<div class="art-red"><span class="k">SIGNAL / '+esc(num)+'</span><b>'+esc(num)+'</b>'+
+          '<span class="t">'+esc(title)+'</span><em>yoya.studio →</em></div>';
+      } else if(lay==='statement'){
+        html+='<div class="art-photo"></div>';
+      } else if(lay==='material'){
+        html+='<div class="art-photo detail"></div>'+
+          '<div class="art-red"><span class="k">CUT ANGLE / '+esc(num)+'</span><b>29.5°</b>'+
+          '<span class="t">切角斜率固定，不做调整。</span></div>';
+      } else if(lay==='contact'){
+        html+='<div class="art-photo"></div>';
+      } else {
+        html+='<span class="art-ghost">'+esc(num)+'</span>';
+      }
+      art.innerHTML=html;
+      band.appendChild(copy); band.appendChild(art);
+      if(lay==='statement'||lay==='contact'){
+        var bar=document.createElement('div'); bar.className='art-bar';
+        bar.innerHTML='<span>继续填写 →</span><em>'+(lay==='statement'?'YOYA — 2026':'yoya.studio')+'</em>';
+        band.appendChild(bar);
+      }
+      sec.classList.add('has-band');
+      sec.insertBefore(band,sec.firstChild);
+      ids.slice(1).forEach(function(id){
+        var m=document.getElementById(id); if(m) m.classList.add('group-member');
+      });
+    });
+  })();
+
+})();
+</script>
+</body>
+</html>
